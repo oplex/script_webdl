@@ -1,0 +1,163 @@
+WebDL - wget-style Website Downloader
+=======================================
+
+QUICK START
+-----------
+
+1. Install dependencies:
+   bash setup.sh
+
+   OR manually:
+   pip3 install -r requirements.txt
+
+2. Download a website:
+   python3 webdl.py example.com
+
+3. Find your downloaded site:
+   sites/example.com/
+
+
+USAGE EXAMPLES
+--------------
+
+Basic usage (download entire site):
+  python3 webdl.py example.com
+
+Download with custom limits:
+  python3 webdl.py example.com --max-depth 5 --max-pages 200
+
+Download with verbose logging:
+  python3 webdl.py example.com --verbose
+
+Download from specific URL:
+  python3 webdl.py https://example.com/docs/
+
+Re-download to update existing site:
+  python3 webdl.py example.com
+  (Will update changed files and add new ones)
+
+
+COMMAND LINE OPTIONS
+--------------------
+
+positional arguments:
+  domain                Domain or URL to download (e.g., example.com)
+
+optional arguments:
+  --max-depth N         Maximum crawl depth (default: 10)
+  --max-pages N         Maximum number of pages (default: 1000)
+  -v, --verbose         Enable verbose debug logging
+  -h, --help            Show help message
+
+
+FEATURES
+--------
+
+- Humanized downloading: Random delays, browser-like headers, avoids bot detection
+- Recursive crawling: Follows all internal links up to specified depth
+- Link conversion: All links converted to relative paths for offline viewing
+- Organized storage: Files saved to sites/domain/ with proper directory structure
+- Incremental updates: Re-run to update existing site with new content
+- Resource downloading: Downloads CSS, JS, images, fonts, and other assets
+- No robots.txt: Downloads regardless of robots.txt restrictions
+- Clean structure: All files under 300 lines, modular design
+
+
+DIRECTORY STRUCTURE
+-------------------
+
+script_webdl/
+├── webdl.py              Main CLI entry point
+├── setup.sh              Quick setup script
+├── requirements.txt      Python dependencies
+├── src/
+│   ├── __init__.py       Package initialization
+│   ├── config.py         Configuration and constants
+│   ├── downloader.py     HTTP downloading with humanization
+│   ├── parser.py         HTML/CSS parsing and link conversion
+│   ├── storage.py        File organization and management
+│   └── crawler.py        Recursive crawling coordinator
+└── sites/                Downloaded websites (created on first run)
+    └── domain/           Each domain gets its own directory
+        ├── index.html    Site homepage
+        ├── .metadata.json Internal tracking (can ignore)
+        └── ...           Other site files
+
+
+VIEWING OFFLINE
+---------------
+
+After downloading, simply open any HTML file in your browser:
+
+1. Navigate to: sites/example.com/
+2. Open index.html in your browser
+3. All links will work correctly for offline viewing
+
+
+ADVANCED USAGE
+--------------
+
+Download small site quickly:
+  python3 webdl.py example.com --max-depth 3 --max-pages 50
+
+Download large documentation site:
+  python3 webdl.py docs.example.com --max-depth 15 --max-pages 5000
+
+Debug crawling issues:
+  python3 webdl.py example.com --verbose
+
+Work with downloaded files using Python:
+  The sites/ directory contains standard HTML/CSS/JS files
+  that can be processed with any Python tools (BeautifulSoup, etc.)
+
+
+TECHNICAL DETAILS
+-----------------
+
+Bot Detection Avoidance:
+- Rotates between multiple realistic User-Agent strings
+- Random delays between requests (1-3 seconds)
+- Browser-like HTTP headers
+- Respects server response times
+
+Link Conversion:
+- Converts absolute URLs to relative paths
+- Handles HTML tags: a, link, script, img, iframe, etc.
+- Processes CSS url() references
+- Supports srcset and inline styles
+
+Storage:
+- Creates sites/domain/ directory structure
+- Preserves original URL path structure
+- Tracks metadata for incremental updates
+- Detects content changes via MD5 hashing
+
+
+LIMITATIONS
+-----------
+
+- JavaScript-heavy sites: Only downloads static HTML (no JS execution)
+- Authentication: Does not handle login/authentication
+- Dynamic content: Cannot capture dynamically loaded content
+- File size: Skips files larger than 100MB
+- Same domain only: Only downloads from the target domain
+
+
+TROUBLESHOOTING
+---------------
+
+Module not found error:
+  Run: pip3 install -r requirements.txt
+
+Permission denied:
+  Make script executable: chmod +x webdl.py
+
+Download interrupted:
+  Just re-run the same command - it will resume and update
+
+Site not loading offline:
+  Check that you're opening the index.html file
+  Some sites may have absolute URLs that weren't converted
+
+
+For more details, check the docstrings in each Python module.

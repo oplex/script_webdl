@@ -15,6 +15,7 @@ import sys
 from .downloader import Downloader, DownloadError, normalize_url, get_domain
 from .parser import LinkExtractor, LinkConverter
 from .storage import Storage
+from .contacts import ContactExtractor
 from .config import MAX_DEPTH, MAX_PAGES, DOWNLOADABLE_EXTENSIONS
 
 logger = logging.getLogger(__name__)
@@ -79,11 +80,14 @@ class Crawler:
             # Phase 2: Convert links in HTML pages
             self._conversion_phase()
 
-            # Phase 3: Commit to git if enabled
+            # Phase 3: Extract contact information
+            self._extract_contacts()
+
+            # Phase 4: Commit to git if enabled
             if self.enable_git:
                 logger.info("")
                 logger.info("=" * 60)
-                logger.info("PHASE 3: Committing changes to git")
+                logger.info("PHASE 4: Committing changes to git")
                 logger.info("=" * 60)
                 self.storage.git_commit()
 
@@ -256,6 +260,19 @@ class Crawler:
 
             except Exception as e:
                 logger.error(f"Error converting {url}: {e}")
+
+    def _extract_contacts(self):
+        """Extract contact information from downloaded pages and git history."""
+        logger.info("")
+        logger.info("=" * 60)
+        logger.info("PHASE 3: Extracting contact information")
+        logger.info("=" * 60)
+
+        try:
+            extractor = ContactExtractor(self.storage.site_dir, self.domain)
+            extractor.extract_all()
+        except Exception as e:
+            logger.error(f"Error extracting contacts: {e}")
 
     def _print_stats(self):
         """Print crawl statistics."""

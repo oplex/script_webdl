@@ -65,6 +65,7 @@ FEATURES
 - Humanized downloading: Random delays, browser-like headers, avoids bot detection
 - Recursive crawling: Follows all internal links up to specified depth
 - Link conversion: All links converted to relative paths for offline viewing
+- Contact extraction: Automatically extracts emails, phones, social media handles
 - Organized storage: Files saved to sites/domain/ with proper directory structure
 - Per-site git repos: Each site gets its own git repo for tracking changes
 - Smart .gitignore: Heavy files (images, videos, PDFs) excluded from git
@@ -89,12 +90,15 @@ script_webdl/
 │   ├── downloader.py     HTTP downloading with humanization
 │   ├── parser.py         HTML/CSS parsing and link conversion
 │   ├── storage.py        File organization and git management
+│   ├── contacts.py       Contact information extraction
+│   ├── git_ops.py        Git repository management
 │   └── crawler.py        Recursive crawling coordinator
 ├── venv/                 Virtual environment (auto-created)
 └── sites/                Downloaded websites (auto-created)
     └── domain/           Each domain gets its own directory
         ├── .git/         Git repo for tracking changes
         ├── .gitignore    Excludes heavy files from git
+        ├── contacts.json Extracted contact information (tracked in git)
         ├── index.html    Site homepage
         ├── .metadata.json Internal tracking (excluded from git)
         └── ...           Other site files
@@ -124,6 +128,57 @@ View site changes:
   git log                    # See all updates
   git diff HEAD~1            # Compare with previous version
   git show                   # View last commit changes
+
+
+CONTACT EXTRACTION
+------------------
+
+Every download automatically extracts contact information and saves it to
+contacts.json in the site directory. This file is tracked in git!
+
+Extracted information:
+- Email addresses (with validation to exclude placeholders)
+- Phone numbers (normalized format)
+- Twitter handles
+- LinkedIn profiles
+- Facebook profiles
+- GitHub accounts
+- Instagram handles
+
+The extractor:
+- Scans all HTML files in the downloaded site
+- Scans git history for contacts in previous versions
+- Deduplicates contacts (no duplicates added)
+- Updates existing contacts.json on each run
+- Excludes common placeholder emails (example.com, test.com, etc.)
+
+View extracted contacts:
+  cat sites/example.com/contacts.json
+
+Example contacts.json:
+  {
+    "domain": "example.com",
+    "last_updated": "2025-11-06T12:00:00.123456",
+    "emails": [
+      "contact@example.com",
+      "support@example.com"
+    ],
+    "phones": [
+      "+15551234567",
+      "15559876543"
+    ],
+    "social_media": {
+      "twitter": ["example_twitter"],
+      "linkedin": ["company/example"],
+      "facebook": ["example.page"],
+      "github": ["example-org"],
+      "instagram": ["example_official"]
+    }
+  }
+
+Contact extraction runs automatically after each download as Phase 3,
+before git commit. This means all extracted contacts are committed to
+the site's git repository for tracking changes over time.
 
 
 VIEWING OFFLINE

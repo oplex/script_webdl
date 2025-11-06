@@ -20,12 +20,12 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
+# Virtual environment (auto-created by webdl.py)
 venv/
 env/
 ENV/
 
-# Downloaded sites
+# Downloaded sites (each has own git repo)
 sites/
 
 # IDE

@@ -29,7 +29,7 @@ class Crawler:
     """
 
     def __init__(self, start_url: str, max_depth: int = MAX_DEPTH,
-                 max_pages: int = MAX_PAGES):
+                 max_pages: int = MAX_PAGES, enable_git: bool = True):
         """
         Initialize the crawler.
 
@@ -37,11 +37,13 @@ class Crawler:
             start_url: Starting URL to crawl from
             max_depth: Maximum depth to crawl
             max_pages: Maximum number of pages to download
+            enable_git: Whether to initialize git and commit changes
         """
         self.start_url = normalize_url(start_url, start_url)
         self.domain = get_domain(self.start_url)
         self.max_depth = max_depth
         self.max_pages = max_pages
+        self.enable_git = enable_git
 
         self.downloader = Downloader()
         self.storage = Storage(self.domain)
@@ -53,6 +55,10 @@ class Crawler:
         self.visited = set()
         self.url_map = {}  # Maps URLs to local file paths
         self.pending_conversions = []  # HTML pages that need link conversion
+
+        # Initialize git if enabled
+        if self.enable_git:
+            self.storage.init_git()
 
         logger.info(f"Initialized crawler for {self.domain}")
 
@@ -72,6 +78,14 @@ class Crawler:
 
             # Phase 2: Convert links in HTML pages
             self._conversion_phase()
+
+            # Phase 3: Commit to git if enabled
+            if self.enable_git:
+                logger.info("")
+                logger.info("=" * 60)
+                logger.info("PHASE 3: Committing changes to git")
+                logger.info("=" * 60)
+                self.storage.git_commit()
 
             # Show statistics
             self._print_stats()

@@ -4,17 +4,16 @@ WebDL - wget-style Website Downloader
 QUICK START
 -----------
 
-1. Install dependencies:
-   bash setup.sh
+Just run it! No setup required - it auto-configures everything:
 
-   OR manually:
-   pip3 install -r requirements.txt
+  python3 webdl.py example.com
 
-2. Download a website:
-   python3 webdl.py example.com
+First run will:
+- Create a virtual environment (venv/)
+- Install all dependencies automatically
+- Start downloading the site
 
-3. Find your downloaded site:
-   sites/example.com/
+Downloaded sites are saved to: sites/example.com/
 
 
 USAGE EXAMPLES
@@ -26,6 +25,9 @@ Basic usage (download entire site):
 Download with custom limits:
   python3 webdl.py example.com --max-depth 5 --max-pages 200
 
+Download without git commits:
+  python3 webdl.py example.com --no-git
+
 Download with verbose logging:
   python3 webdl.py example.com --verbose
 
@@ -34,7 +36,12 @@ Download from specific URL:
 
 Re-download to update existing site:
   python3 webdl.py example.com
-  (Will update changed files and add new ones)
+  (Updates changed files, commits changes to git)
+
+Parallel downloads (multiple terminals):
+  Terminal 1: python3 webdl.py example1.com
+  Terminal 2: python3 webdl.py example2.com
+  Terminal 3: python3 webdl.py example3.com
 
 
 COMMAND LINE OPTIONS
@@ -46,6 +53,7 @@ positional arguments:
 optional arguments:
   --max-depth N         Maximum crawl depth (default: 10)
   --max-pages N         Maximum number of pages (default: 1000)
+  --no-git              Skip git commit after download
   -v, --verbose         Enable verbose debug logging
   -h, --help            Show help message
 
@@ -53,11 +61,17 @@ optional arguments:
 FEATURES
 --------
 
+- Auto-setup: First run creates venv and installs dependencies automatically
 - Humanized downloading: Random delays, browser-like headers, avoids bot detection
 - Recursive crawling: Follows all internal links up to specified depth
 - Link conversion: All links converted to relative paths for offline viewing
 - Organized storage: Files saved to sites/domain/ with proper directory structure
+- Per-site git repos: Each site gets its own git repo for tracking changes
+- Smart .gitignore: Heavy files (images, videos, PDFs) excluded from git
+- Auto-commit: Changes committed automatically after each download
 - Incremental updates: Re-run to update existing site with new content
+- Parallel safe: Run multiple downloads simultaneously without conflicts
+- Portable: No hardcoded paths, works anywhere
 - Resource downloading: Downloads CSS, JS, images, fonts, and other assets
 - No robots.txt: Downloads regardless of robots.txt restrictions
 - Clean structure: All files under 300 lines, modular design
@@ -67,21 +81,49 @@ DIRECTORY STRUCTURE
 -------------------
 
 script_webdl/
-├── webdl.py              Main CLI entry point
-├── setup.sh              Quick setup script
+├── webdl.py              Main CLI (self-contained, auto-setup)
 ├── requirements.txt      Python dependencies
 ├── src/
 │   ├── __init__.py       Package initialization
 │   ├── config.py         Configuration and constants
 │   ├── downloader.py     HTTP downloading with humanization
 │   ├── parser.py         HTML/CSS parsing and link conversion
-│   ├── storage.py        File organization and management
+│   ├── storage.py        File organization and git management
 │   └── crawler.py        Recursive crawling coordinator
-└── sites/                Downloaded websites (created on first run)
+├── venv/                 Virtual environment (auto-created)
+└── sites/                Downloaded websites (auto-created)
     └── domain/           Each domain gets its own directory
+        ├── .git/         Git repo for tracking changes
+        ├── .gitignore    Excludes heavy files from git
         ├── index.html    Site homepage
-        ├── .metadata.json Internal tracking (can ignore)
+        ├── .metadata.json Internal tracking (excluded from git)
         └── ...           Other site files
+
+
+PER-SITE GIT REPOSITORIES
+-------------------------
+
+Each downloaded site gets its own git repository automatically!
+
+Tracked files (in git):
+- HTML files (.html, .htm)
+- CSS stylesheets (.css)
+- JavaScript files (.js, .json)
+- Text files (.txt, .xml)
+- Fonts (.woff, .woff2, .ttf, etc.)
+
+Excluded from git (heavy files):
+- Images (.jpg, .png, .gif, .svg, .webp, etc.)
+- Videos (.mp4, .avi, .mov, .webm, etc.)
+- Audio (.mp3, .wav, .ogg, etc.)
+- PDFs (.pdf)
+- Archives (.zip, .tar, .gz, etc.)
+
+View site changes:
+  cd sites/example.com
+  git log                    # See all updates
+  git diff HEAD~1            # Compare with previous version
+  git show                   # View last commit changes
 
 
 VIEWING OFFLINE
@@ -94,6 +136,23 @@ After downloading, simply open any HTML file in your browser:
 3. All links will work correctly for offline viewing
 
 
+PARALLEL DOWNLOADS
+------------------
+
+You can run multiple downloads at the same time safely:
+
+  # Terminal 1
+  python3 webdl.py site1.com
+
+  # Terminal 2
+  python3 webdl.py site2.com
+
+  # Terminal 3
+  python3 webdl.py site3.com
+
+Each site has its own directory and git repo, so they won't conflict.
+
+
 ADVANCED USAGE
 --------------
 
@@ -103,16 +162,36 @@ Download small site quickly:
 Download large documentation site:
   python3 webdl.py docs.example.com --max-depth 15 --max-pages 5000
 
+Download without git tracking:
+  python3 webdl.py example.com --no-git
+
 Debug crawling issues:
   python3 webdl.py example.com --verbose
+
+Update existing site:
+  python3 webdl.py example.com
+  (Downloads new content, updates changed files, commits to git)
 
 Work with downloaded files using Python:
   The sites/ directory contains standard HTML/CSS/JS files
   that can be processed with any Python tools (BeautifulSoup, etc.)
 
+Track site changes over time:
+  cd sites/example.com
+  git log --oneline          # Compact history
+  git diff @{1.day.ago}      # Changes since yesterday
+  git log --stat             # See which files changed
+
 
 TECHNICAL DETAILS
 -----------------
+
+Auto-Setup:
+- Detects if running in virtual environment
+- Creates venv/ if doesn't exist
+- Installs dependencies automatically
+- Re-executes itself in venv context
+- Fully portable - works from any directory
 
 Bot Detection Avoidance:
 - Rotates between multiple realistic User-Agent strings
@@ -132,6 +211,13 @@ Storage:
 - Tracks metadata for incremental updates
 - Detects content changes via MD5 hashing
 
+Git Integration:
+- Auto-initializes git repo per site
+- Creates smart .gitignore for heavy files
+- Auto-commits after each download
+- Tracks HTML/CSS/JS changes over time
+- Each site has isolated git history
+
 
 LIMITATIONS
 -----------
@@ -146,8 +232,8 @@ LIMITATIONS
 TROUBLESHOOTING
 ---------------
 
-Module not found error:
-  Run: pip3 install -r requirements.txt
+No module named 'requests':
+  Just run again - first run auto-installs dependencies
 
 Permission denied:
   Make script executable: chmod +x webdl.py
@@ -158,6 +244,29 @@ Download interrupted:
 Site not loading offline:
   Check that you're opening the index.html file
   Some sites may have absolute URLs that weren't converted
+
+Git not committing:
+  Use --verbose to see git errors
+  Or use --no-git to disable git integration
+
+Parallel downloads conflicting:
+  Each site should have its own directory - shouldn't conflict
+  If same domain, second download will update the first
+
+
+PORTABILITY
+-----------
+
+This tool is fully portable:
+- No hardcoded paths - uses relative paths
+- Auto-creates venv in script directory
+- Works from any location
+- Just copy the directory and run
+
+To copy to another machine:
+  cp -r script_webdl /path/to/destination
+  cd /path/to/destination
+  python3 webdl.py example.com  # Works immediately!
 
 
 For more details, check the docstrings in each Python module.

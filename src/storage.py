@@ -16,6 +16,7 @@ from typing import Optional, Dict
 from datetime import datetime
 
 from .config import SITES_DIR, INDEX_FILE
+from .git_ops import GitManager
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class Storage:
         self.site_dir = self.base_dir / self._sanitize_domain(domain)
         self.metadata_file = self.site_dir / '.metadata.json'
         self.metadata = {}
+        self.git = GitManager(self.site_dir)
 
         self._ensure_directory()
         self._load_metadata()
@@ -241,3 +243,17 @@ class Storage:
             'total_size': total_size,
             'directory': str(self.site_dir),
         }
+
+    def init_git(self):
+        """Initialize git repository with appropriate gitignore."""
+        self.git.init_repo()
+
+    def git_commit(self, message: Optional[str] = None):
+        """
+        Commit changes to git repository.
+
+        Args:
+            message: Optional commit message. Auto-generated if not provided.
+        """
+        stats = self.get_stats()
+        self.git.commit(message, stats)
